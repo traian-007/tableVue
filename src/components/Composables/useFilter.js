@@ -1,0 +1,73 @@
+import { computed } from "vue";
+
+export default function useFilter(getEntries, getSearch, getFilter) {
+  const searchedEntries = computed(() => {
+    let newEntries = [];
+    if (getSearch.value.length > 1) {
+      newEntries = getEntries.value.filter((obj) => {
+        for (const key of Object.keys(obj)) {
+          if (
+            isNaN(obj[key]) === false &&
+            Number(obj[key]) === Number(getSearch.value)
+          ) {
+            return true;
+          } else if (
+            typeof obj[key] === "string" &&
+            String(obj[key])
+              .toLowerCase()
+              .includes(String(getSearch.value).toLowerCase())
+          ) {
+            return true;
+          }
+        }
+        return false;
+      });
+    } else {
+      newEntries = getEntries.value;
+    }
+    return newEntries;
+  });
+
+  const getCleanFilter = computed(() => {
+    const newObj = {};
+    const newSet = new Set(["", 0, null, undefined]);
+    for (const key of Object.keys(getFilter.value)) {
+      if (!newSet.has(getFilter.value[key])) {
+        newObj[key] = getFilter.value[key];
+      }
+    }
+    return newObj;
+  });
+
+  const filteredEntries = computed(() => {
+    let newEntries = searchedEntries.value;
+    //@ts-ignore
+    for (const ftrKey of Object.keys(getCleanFilter.value)) {
+      newEntries = newEntries.filter((obj) => {
+        if (ftrKey in obj) {
+          if (
+            isNaN(obj[ftrKey]) === false &&
+            Number(obj[ftrKey]) === Number(getCleanFilter.value[ftrKey])
+          ) {
+            return true;
+          } else if (
+            typeof obj[ftrKey] === "string" &&
+            String(obj[ftrKey])
+              .toLowerCase()
+              .includes(String(getCleanFilter.value[ftrKey]).toLowerCase())
+          ) {
+            return true;
+          }
+        }
+        return false;
+      });
+    }
+    return newEntries;
+  });
+
+  return {
+    searchedEntries,
+    getCleanFilter,
+    filteredEntries,
+  };
+}
